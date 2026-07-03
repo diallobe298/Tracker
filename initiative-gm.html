@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Initiative Tracker — GM Panel</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --bg2: #16213e;
+    --bg3: #0f3460;
+    --surface: #1e2a45;
+    --surface2: #253352;
+    --border: #2e4070;
+    --border2: #3d5494;
+    --text: #e8eaf6;
+    --text2: #9fa8c7;
+    --text3: #6b7aa1;
+    --accent: #e94560;
+    --accent2: #c73652;
+    --gold: #f5a623;
+    --gold2: #d4891a;
+    --green: #4caf82;
+    --green2: #3a9169;
+    --red: #e94560;
+    --blue: #4a9eff;
+    --active-bg: #1a3a5c;
+    --active-border: #4a9eff;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 12px;
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .round-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--gold);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+  }
+  .display-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+  }
+  .display-btn:hover { background: var(--accent2); }
+
+  /* Roster section */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .roster-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .roster-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-family: var(--font);
+    width: 100%;
+  }
+  .roster-input:focus { outline: none; border-color: var(--border2); }
+  .roster-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-top: 6px;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+  .roster-item {
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .roster-item:last-child { border-bottom: none; }
+  .roster-item:hover { background: var(--surface2); color: var(--blue); }
+  .roster-item.selected { background: var(--active-bg); color: var(--blue); }
+
+  /* Buttons row */
+  .btn-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .btn {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg3); border-color: var(--blue); color: var(--blue); }
+  .btn.primary { background: var(--bg3); border-color: var(--blue); color: var(--blue); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn.danger:hover { background: rgba(233,69,96,0.12); }
+  .btn.success { border-color: var(--green); color: var(--green); }
+  .btn.success:hover { background: rgba(76,175,130,0.12); }
+  .btn.gold { border-color: var(--gold); color: var(--gold); }
+  .btn.gold:hover { background: rgba(245,166,35,0.12); }
+
+  /* Add character row */
+  .add-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 10px 0;
+  }
+  .add-row input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-family: var(--font);
+  }
+  .add-row input:focus { outline: none; border-color: var(--blue); }
+  .name-input { flex: 2; }
+  .init-input { flex: 0 0 70px; }
+  .add-btn {
+    background: var(--green2);
+    border: none;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .add-btn:hover { background: var(--green); }
+
+  /* Initiative table */
+  .tracker-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    font-size: 14px;
+  }
+  .tracker-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tracker-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .tracker-table tr:last-child td { border-bottom: none; }
+  .tracker-table tr.active-row td {
+    background: var(--active-bg);
+    border-color: var(--active-border);
+  }
+  .tracker-table tr.active-row td:first-child {
+    border-left: 3px solid var(--blue);
+  }
+  .tracker-table tr.selected-row td { background: var(--surface2); }
+  .tracker-table tr:not(.active-row):hover td { background: var(--surface); cursor: pointer; }
+  .marker { color: var(--blue); font-size: 16px; width: 20px; }
+  .init-cell { color: var(--gold); font-weight: 600; width: 60px; text-align: center; }
+  .name-cell { color: var(--text); }
+  .edit-init { color: var(--text3); font-size: 12px; cursor: pointer; }
+  .edit-init:hover { color: var(--blue); }
+
+  /* Action buttons grid */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 10px 0;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 20px;
+    min-width: 280px;
+    max-width: 340px;
+  }
+  .modal h3 { font-size: 15px; color: var(--gold); margin-bottom: 12px; }
+  .modal input {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: var(--font);
+    width: 100%;
+    margin-bottom: 12px;
+  }
+  .modal input:focus { outline: none; border-color: var(--blue); }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-btns .btn { font-size: 13px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--green);
+    color: var(--green);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* Scrollable table container */
+  .table-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text3);
+    font-size: 13px;
+    padding: 20px;
+    font-style: italic;
+  }
+  .section-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚔ Initiative Tracker — GM</h1>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span class="round-badge" id="roundBadge">Round —</span>
+    <button class="display-btn" onclick="openDisplay()">Open Player Display ↗</button>
+  </div>
+</div>
+
+<!-- Roster Section -->
+<div class="section-block">
+  <div class="section-label">Session Roster (up to 6 players)</div>
+  <div class="roster-grid" id="rosterInputs"></div>
+  <div class="roster-list" id="rosterList"></div>
+  <div class="btn-row" style="margin-top:8px;">
+    <button class="btn primary" onclick="addSelectedRoster()">Add selected</button>
+    <button class="btn" onclick="addAllPlayers()">Add all</button>
+    <button class="btn gold" onclick="clearAndAddAll()">Clear + Add all</button>
+  </div>
+</div>
+
+<!-- Add Character -->
+<div class="section-block">
+  <div class="section-label">Add to encounter</div>
+  <div class="add-row">
+    <input class="name-input" type="text" id="nameInput" placeholder="Character / monster name" />
+    <input class="init-input" type="number" id="initInput" placeholder="Init" />
+    <button class="add-btn" onclick="addCharacter()">Add</button>
+  </div>
+</div>
+
+<!-- Initiative List -->
+<div class="section-block" style="padding:10px 0;">
+  <div style="padding:0 12px 6px;" class="section-label">Encounter order — click row to select, double-click init to edit</div>
+  <div class="table-container">
+    <table class="tracker-table">
+      <thead>
+        <tr>
+          <th style="width:24px;"></th>
+          <th style="width:60px;text-align:center;">Init</th>
+          <th>Name</th>
+          <th style="width:32px;"></th>
+        </tr>
+      </thead>
+      <tbody id="trackerBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Actions -->
+<div class="actions-grid">
+  <button class="btn success" onclick="nextTurn()">▶ Next turn</button>
+  <button class="btn" onclick="sortInitiative()">⇅ Sort</button>
+  <button class="btn" onclick="setTurnHere()">Set turn here</button>
+  <button class="btn" onclick="moveUp()">↑ Move up</button>
+  <button class="btn" onclick="moveDown()">↓ Move down</button>
+  <button class="btn danger" onclick="removeCharacter()">✕ Remove</button>
+  <button class="btn" onclick="saveList()">💾 Save</button>
+  <button class="btn" onclick="loadList()">📂 Load</button>
+  <button class="btn danger" onclick="clearList()" style="grid-column:span 2;">Clear encounter</button>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3 id="editModalTitle">Edit initiative</h3>
+    <input type="number" id="editInitInput" />
+    <div class="modal-btns">
+      <button class="btn" onclick="closeEditModal()">Cancel</button>
+      <button class="btn primary" onclick="confirmEditInit()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="confirmTitle">Confirm</h3>
+    <p id="confirmMsg" style="color:var(--text2);font-size:13px;margin-bottom:14px;"></p>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeConfirm(false)">Cancel</button>
+      <button class="btn danger" onclick="closeConfirm(true)">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'pf2e_initiative_state';
+
+let state = {
+  initiativeList: [],
+  activeIndex: 0,
+  roundCount: 0,
+  roundAnchorId: '',
+  anchorArmed: false,
+  nextId: 1,
+  roster: ['','','','','',''],
+  selectedRow: -1
+};
+
+// ── Roster ──────────────────────────────────────────────────────
+function buildRosterInputs() {
+  const c = document.getElementById('rosterInputs');
+  c.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const inp = document.createElement('input');
+    inp.className = 'roster-input';
+    inp.type = 'text';
+    inp.placeholder = `Player ${i+1}`;
+    inp.value = state.roster[i] || '';
+    inp.addEventListener('input', () => {
+      state.roster[i] = inp.value.trim();
+      updateRosterList();
+    });
+    c.appendChild(inp);
+  }
+}
+
+function updateRosterList() {
+  const list = document.getElementById('rosterList');
+  list.innerHTML = '';
+  let hasAny = false;
+  state.roster.forEach((name, i) => {
+    if (!name) return;
+    hasAny = true;
+    const d = document.createElement('div');
+    d.className = 'roster-item';
+    d.textContent = name;
+    d.dataset.idx = i;
+    d.addEventListener('click', () => {
+      document.querySelectorAll('.roster-item').forEach(x => x.classList.remove('selected'));
+      d.classList.add('selected');
+    });
+    d.addEventListener('dblclick', () => addCharacterByName(name, 0));
+    list.appendChild(d);
+  });
+  if (!hasAny) {
+    list.innerHTML = '<div class="empty-state">No players entered above</div>';
+  }
+}
+
+function getSelectedRosterName() {
+  const sel = document.querySelector('.roster-item.selected');
+  return sel ? sel.textContent : null;
+}
+
+function addSelectedRoster() {
+  const name = getSelectedRosterName();
+  if (!name) { showToast('Select a player first'); return; }
+  addCharacterByName(name, 0);
+}
+
+function addAllPlayers() {
+  state.roster.forEach(name => { if (name) addCharacterByName(name, 0); });
+}
+
+function clearAndAddAll() {
+  resetEncounterState();
+  state.roster.forEach(name => { if (name) addCharacterByName(name, 0); });
+  startEncounterIfNeeded();
+  updateAll();
+}
+
+// ── Encounter state helpers ──────────────────────────────────────
+function resetEncounterState() {
+  state.initiativeList = [];
+  state.activeIndex = 0;
+  state.roundCount = 0;
+  state.roundAnchorId = '';
+  state.anchorArmed = false;
+  state.selectedRow = -1;
+}
+
+function startEncounterIfNeeded() {
+  if (state.initiativeList.length > 0 && state.roundCount === 0) {
+    state.activeIndex = 0;
+    state.roundCount = 1;
+    state.roundAnchorId = state.initiativeList[0].id;
+    state.anchorArmed = false;
+  }
+}
+
+function anchorExists() {
+  return state.initiativeList.some(c => c.id === state.roundAnchorId);
+}
+
+function ensureAnchorValid() {
+  if (state.initiativeList.length === 0) { state.roundAnchorId = ''; state.anchorArmed = false; return; }
+  if (!state.roundAnchorId || !anchorExists()) {
+    state.roundAnchorId = state.initiativeList[0].id;
+    state.anchorArmed = false;
+  }
+}
+
+function maybeSyncAnchorToTop() {
+  if (state.initiativeList.length === 0) return;
+  if (state.roundCount === 1 && !state.anchorArmed)
+    state.roundAnchorId = state.initiativeList[0].id;
+}
+
+function enforceAnchorAtTopIfSafe() {
+  const list = state.initiativeList;
+  if (list.length === 0 || !state.roundAnchorId) return;
+  if (list[0].id === state.roundAnchorId) return;
+
+  let safeToReset = false;
+  if (state.roundCount === 1 && !state.anchorArmed) {
+    safeToReset = true;
+  } else {
+    const ai = state.activeIndex;
+    if (ai >= 0 && ai < list.length && list[ai].id === state.roundAnchorId)
+      safeToReset = true;
+  }
+
+  if (safeToReset) {
+    state.roundAnchorId = list[0].id;
+    state.anchorArmed = false;
+    if (state.activeIndex < 0 || state.activeIndex >= list.length)
+      state.activeIndex = 0;
+  }
+}
+
+// ── Add / Edit characters ────────────────────────────────────────
+function addCharacter() {
+  const name = document.getElementById('nameInput').value.trim();
+  const scoreText = document.getElementById('initInput').value.trim();
+  if (!name) { showToast('Enter a character name'); return; }
+  const score = parseFloat(scoreText);
+  if (scoreText === '' || isNaN(score)) { showToast('Enter a valid initiative score'); return; }
+  state.initiativeList.push({ id: state.nextId++, name, initiative: score });
+  document.getElementById('nameInput').value = '';
+  document.getElementById('initInput').value = '';
+  sortInitiativeArr();
+  startEncounterIfNeeded();
+  updateAll();
+}
+
+function addCharacterByName(name, score = 0) {
+  if (!name) return;
+  state.initiativeList.push({ id: state.nextId++, name, initiative: score });
+  sortInitiativeArr();
+  startEncounterIfNeeded();
+  updateAll();
+}
+
+// ── Sorting ──────────────────────────────────────────────────────
+function sortInitiativeArr() {
+  const activeId = state.initiativeList[state.activeIndex]?.id;
+  state.initiativeList.sort((a, b) => b.initiative - a.initiative);
+  if (activeId !== undefined) {
+    const idx = state.initiativeList.findIndex(c => c.id === activeId);
+    state.activeIndex = idx >= 0 ? idx : 0;
+  }
+}
+
+function sortInitiative() {
+  sortInitiativeArr();
+  ensureAnchorValid();
+  maybeSyncAnchorToTop();
+  enforceAnchorAtTopIfSafe();
+  updateAll();
+}
+
+// ── Navigation ───────────────────────────────────────────────────
+function nextTurn() {
+  const list = state.initiativeList;
+  if (list.length === 0) return;
+  if (state.roundCount === 0) startEncounterIfNeeded();
+
+  if (state.activeIndex >= list.length - 1) state.activeIndex = 0;
+  else state.activeIndex++;
+
+  if (state.roundAnchorId && list[state.activeIndex].id !== state.roundAnchorId)
+    state.anchorArmed = true;
+  if (state.roundAnchorId && state.anchorArmed && list[state.activeIndex].id === state.roundAnchorId) {
+    state.roundCount++;
+    state.anchorArmed = false;
+  }
+  updateAll();
+}
+
+function setTurnHere() {
+  const row = state.selectedRow;
+  if (row < 0 || row >= state.initiativeList.length) { showToast('Select a row first'); return; }
+  if (state.roundCount === 0) startEncounterIfNeeded();
+  state.activeIndex = row;
+  if (state.roundCount <= 1 && !state.anchorArmed) {
+    state.roundCount = 1;
+    state.roundAnchorId = state.initiativeList[row].id;
+    state.anchorArmed = false;
+    enforceAnchorAtTopIfSafe();
+  }
+  updateAll();
+}
+
+// ── Move / Remove ────────────────────────────────────────────────
+function moveUp() {
+  const row = state.selectedRow;
+  if (row <= 0) return;
+  if (row === state.activeIndex) state.activeIndex--;
+  else if (row - 1 === state.activeIndex) state.activeIndex++;
+  swapItems(row, row - 1);
+  state.selectedRow--;
+  ensureAnchorValid();
+  maybeSyncAnchorToTop();
+  enforceAnchorAtTopIfSafe();
+  updateAll();
+}
+
+function moveDown() {
+  const row = state.selectedRow;
+  if (row < 0 || row >= state.initiativeList.length - 1) return;
+  if (row === state.activeIndex) state.activeIndex++;
+  else if (row + 1 === state.activeIndex) state.activeIndex--;
+  swapItems(row, row + 1);
+  state.selectedRow++;
+  ensureAnchorValid();
+  maybeSyncAnchorToTop();
+  enforceAnchorAtTopIfSafe();
+  updateAll();
+}
+
+function swapItems(i, j) {
+  [state.initiativeList[i], state.initiativeList[j]] = [state.initiativeList[j], state.initiativeList[i]];
+}
+
+function removeCharacter() {
+  const row = state.selectedRow;
+  if (row < 0 || row >= state.initiativeList.length) { showToast('Select a row first'); return; }
+
+  const wasActive = row === state.activeIndex;
+  const removedId = state.initiativeList[row].id;
+  state.initiativeList.splice(row, 1);
+
+  if (state.initiativeList.length === 0) { resetEncounterState(); updateAll(); return; }
+
+  if (row < state.activeIndex) state.activeIndex--;
+  else if (wasActive && state.activeIndex >= state.initiativeList.length)
+    state.activeIndex = state.initiativeList.length - 1;
+
+  if (removedId === state.roundAnchorId) {
+    state.roundAnchorId = state.initiativeList[0].id;
+    state.anchorArmed = false;
+  } else {
+    ensureAnchorValid();
+  }
+
+  maybeSyncAnchorToTop();
+  enforceAnchorAtTopIfSafe();
+
+  state.selectedRow = Math.min(row, state.initiativeList.length - 1);
+  updateAll();
+}
+
+// ── Edit init modal ──────────────────────────────────────────────
+let editingRow = -1;
+function openEditModal(row) {
+  editingRow = row;
+  const ch = state.initiativeList[row];
+  document.getElementById('editModalTitle').textContent = `Edit initiative: ${ch.name}`;
+  document.getElementById('editInitInput').value = ch.initiative;
+  document.getElementById('editModal').classList.add('open');
+  setTimeout(() => document.getElementById('editInitInput').select(), 50);
+}
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('open');
+  editingRow = -1;
+}
+function confirmEditInit() {
+  const val = parseFloat(document.getElementById('editInitInput').value);
+  if (isNaN(val)) { showToast('Invalid number'); return; }
+  state.initiativeList[editingRow].initiative = val;
+  closeEditModal();
+  sortInitiative();
+}
+document.getElementById('editModal').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmEditInit();
+  if (e.key === 'Escape') closeEditModal();
+});
+
+// ── Confirm modal ────────────────────────────────────────────────
+let confirmCallback = null;
+function openConfirm(title, msg, cb) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  confirmCallback = cb;
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirm(yes) {
+  document.getElementById('confirmModal').classList.remove('open');
+  if (yes && confirmCallback) confirmCallback();
+  confirmCallback = null;
+}
+
+// ── Clear ────────────────────────────────────────────────────────
+function clearList() {
+  openConfirm('Clear encounter?', 'This will clear the encounter list. The roster stays.', () => {
+    resetEncounterState();
+    updateAll();
+  });
+}
+
+// ── Save / Load ──────────────────────────────────────────────────
+const SAVE_KEY = 'pf2e_save_encounter';
+
+function saveList() {
+  const lines = state.initiativeList.map(c => `${c.initiative}\t${c.name}`).join('\n');
+  localStorage.setItem(SAVE_KEY, lines);
+  showToast('Encounter saved');
+}
+
+function loadList() {
+  const text = localStorage.getItem(SAVE_KEY);
+  if (!text) { showToast('No saved encounter found'); return; }
+  state.initiativeList = [];
+  state.activeIndex = 0;
+  state.roundCount = 0;
+  state.roundAnchorId = '';
+  state.anchorArmed = false;
+  state.selectedRow = -1;
+
+  text.split('\n').forEach(line => {
+    line = line.trim();
+    if (!line) return;
+    const parts = line.split('\t');
+    if (parts.length < 2) return;
+    const score = parseFloat(parts[0].trim());
+    const name = parts[1].trim();
+    if (!name || isNaN(score)) return;
+    state.initiativeList.push({ id: state.nextId++, name, initiative: score });
+  });
+
+  sortInitiativeArr();
+  startEncounterIfNeeded();
+  updateAll();
+  showToast('Encounter loaded');
+}
+
+// ── Display window ───────────────────────────────────────────────
+let displayWin = null;
+function openDisplay() {
+  if (displayWin && !displayWin.closed) {
+    displayWin.focus();
+  } else {
+    displayWin = window.open('initiative-display.html', 'InitiativeDisplay',
+      'width=700,height=600,menubar=no,toolbar=no,location=no');
+  }
+  pushToDisplay();
+}
+
+function pushToDisplay() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    initiativeList: state.initiativeList,
+    activeIndex: state.activeIndex,
+    roundCount: state.roundCount,
+    ts: Date.now()
+  }));
+}
+
+// ── Render ───────────────────────────────────────────────────────
+function updateAll() {
+  const list = state.initiativeList;
+  const body = document.getElementById('trackerBody');
+  body.innerHTML = '';
+
+  if (list.length === 0) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    td.className = 'empty-state';
+    td.textContent = 'No characters in encounter';
+    tr.appendChild(td);
+    body.appendChild(tr);
+  } else {
+    list.forEach((ch, i) => {
+      const tr = document.createElement('tr');
+      if (i === state.activeIndex) tr.classList.add('active-row');
+      if (i === state.selectedRow) tr.classList.add('selected-row');
+
+      tr.addEventListener('click', () => {
+        state.selectedRow = i;
+        updateAll();
+      });
+
+      const markerTd = document.createElement('td');
+      markerTd.className = 'marker';
+      markerTd.textContent = i === state.activeIndex ? '▶' : '';
+      tr.appendChild(markerTd);
+
+      const initTd = document.createElement('td');
+      initTd.className = 'init-cell';
+      initTd.textContent = ch.initiative;
+      initTd.title = 'Double-click to edit';
+      initTd.addEventListener('dblclick', e => { e.stopPropagation(); openEditModal(i); });
+      tr.appendChild(initTd);
+
+      const nameTd = document.createElement('td');
+      nameTd.className = 'name-cell';
+      nameTd.textContent = ch.name;
+      tr.appendChild(nameTd);
+
+      const editTd = document.createElement('td');
+      editTd.className = 'edit-init';
+      editTd.textContent = '✎';
+      editTd.title = 'Edit initiative';
+      editTd.addEventListener('click', e => { e.stopPropagation(); openEditModal(i); });
+      tr.appendChild(editTd);
+
+      body.appendChild(tr);
+    });
+  }
+
+  const roundText = state.roundCount > 0 ? `Round ${state.roundCount}` : 'Round —';
+  document.getElementById('roundBadge').textContent = roundText;
+
+  pushToDisplay();
+}
+
+// ── Toast ────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── Keyboard shortcuts ───────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' || e.key === 'n') nextTurn();
+  if (e.key === 'ArrowUp') { e.preventDefault(); moveUp(); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveDown(); }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (state.selectedRow >= 0) removeCharacter();
+  }
+});
+
+// Enter key in add-row
+document.getElementById('nameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('initInput').focus();
+});
+document.getElementById('initInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addCharacter();
+});
+
+// ── Init ─────────────────────────────────────────────────────────
+buildRosterInputs();
+updateRosterList();
+updateAll();
+</script>
+</body>
+</html>
